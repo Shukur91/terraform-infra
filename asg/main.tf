@@ -14,6 +14,21 @@ data "aws_ami" "ubuntu" {
   owners = ["099720109477"] # Canonical
 }
 
+data "terraform_remote_state" "vpc" {
+  backend = "remote"
+
+  config = {
+    organization = "iminov"
+    workspaces = {
+      name = "vpc"
+    }
+  }
+}
+
+
+
+
+
 
 module "asg" {
   source  = "terraform-aws-modules/autoscaling/aws"
@@ -24,6 +39,7 @@ module "asg" {
   desired_capacity          = 1
   wait_for_capacity_timeout = 0
   health_check_type         = "EC2"
+  vpc_zone_identifier = data.terraform_remote_state.vpc.outputs.private_subnets
   availability_zones = ["us-east-1a", "us-east-1b"]
   # Launch template
   launch_template_name        = "example-asg"
